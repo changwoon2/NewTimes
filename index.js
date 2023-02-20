@@ -1,4 +1,6 @@
 let news = [];
+let page = 1;
+let total_pages = 0;
 let url;
 let menus = document.querySelectorAll(".menus button");
 console.log("menus", menus);
@@ -13,6 +15,7 @@ const getNews = async () => {
     let header = new Headers({
       "x-api-key": "IdK0gOCehLGzFjjcsbAeVTZP22L99ENbRHU60JYC6HA",
     });
+    url.searchParams.set("page", page);
     let response = await fetch(url, { headers: header });
     let data = await response.json();
     if (response.status == 200) {
@@ -20,7 +23,10 @@ const getNews = async () => {
         throw new Error("결과없음");
       }
       news = data.articles;
+      total_pages = data.total_pages;
+      page = data.page;
       render();
+      pagenation();
     } else {
       throw new Error(data.message);
     }
@@ -84,5 +90,38 @@ const errorRender = (message) => {
   </div>`;
   document.getElementById("news-board").innerHTML = errorHTML;
 };
+
+const pagenation = () => {
+  let pagenationHTML = ``;
+  let pageGroup = Math.ceil(page / 5);
+  let last = pageGroup * 5;
+  let first = last - 4;
+  pagenationHTML = ` <li class="page-item">
+  <a class="page-link" href="#" aria-label="Previous" onclick="moveToPage(${
+    page - 1
+  })">
+    <span aria-hidden="true">&lt;</span>
+  </a>
+</li>`;
+  for (let i = first; i <= last; i++) {
+    pagenationHTML += ` <li class="page-item${
+      page === i ? "active" : ""
+    }"><a class="page-link" href="#" onclick="moveToPage(${i})">${i}</a></li>`;
+  }
+  pagenationHTML += ` <li class="page-item">
+  <a class="page-link" href="#" aria-label="Next" onclick="moveToPage(${
+    page + 1
+  })">
+    <span aria-hidden="true">&gt;</span>
+  </a>
+</li>`;
+
+  document.querySelectorAll(".pagenation").innerHTML = pagenationHTML;
+};
+const moveToPage = (pageNum) => {
+  page = pageNum;
+  getNews();
+};
+
 serchButton.addEventListener("click", getNewsByKeyword);
 getLatestNews();
