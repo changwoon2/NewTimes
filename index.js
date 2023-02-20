@@ -9,15 +9,27 @@ menus.forEach((menu) =>
 let serchButton = document.getElementById("search-button");
 
 const getNews = async () => {
-  let header = new Headers({
-    "x-api-key": "IdK0gOCehLGzFjjcsbAeVTZP22L99ENbRHU60JYC6HA",
-  });
-  let response = await fetch(url, { headers: header });
-  let data = await response.json();
-  news = data.articles;
-
-  render();
+  try {
+    let header = new Headers({
+      "x-api-key": "IdK0gOCehLGzFjjcsbAeVTZP22L99ENbRHU60JYC6HA",
+    });
+    let response = await fetch(url, { headers: header });
+    let data = await response.json();
+    if (response.status == 200) {
+      if (data.total_hits == 0) {
+        throw new Error("결과없음");
+      }
+      news = data.articles;
+      render();
+    } else {
+      throw new Error(data.message);
+    }
+  } catch (error) {
+    console.log("에러는", error.message);
+    errorRender(error.message);
+  }
 };
+
 const getLatestNews = async () => {
   url = new URL(
     "https://api.newscatcherapi.com/v2/latest_headlines?countries=KR&topic=sport&page_size=2"
@@ -65,6 +77,12 @@ const render = () => {
     .join("");
   console.log(newsHTML);
   document.getElementById("news-board").innerHTML = newsHTML;
+};
+const errorRender = (message) => {
+  let errorHTML = `<div class="alert alert-danger text-center" role="alert">
+  ${message}
+  </div>`;
+  document.getElementById("news-board").innerHTML = errorHTML;
 };
 serchButton.addEventListener("click", getNewsByKeyword);
 getLatestNews();
